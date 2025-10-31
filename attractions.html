@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>景点消费 - 智能旅行规划师</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Animation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    
+    <!-- Chart Library -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        
+        .font-serif {
+            font-family: 'Noto Serif SC', serif;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6, #1e3a8a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .category-tag {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .category-tag:hover {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+        }
+        
+        .category-tag.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        .animate-fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        
+        .crowd-low {
+            background: linear-gradient(45deg, #10b981, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .crowd-medium {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .crowd-high {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .rating-stars {
+            color: #fbbf24;
+        }
+        
+        .budget-item {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 2rem;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 0.5rem;
+            width: 0.75rem;
+            height: 0.75rem;
+            background: #3b82f6;
+            border-radius: 50%;
+        }
+        
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 0.875rem;
+            top: 1.25rem;
+            width: 2px;
+            height: calc(100% - 1rem);
+            background: #e5e7eb;
+        }
+        
+        .timeline-item:last-child::after {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold gradient-text font-serif">智能旅行规划师</h1>
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="index.html" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">首页</a>
+                        <a href="hotels.html" class="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">酒店信息</a>
+                        <a href="attractions.html" class="text-blue-600 hover:text-blue-800 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-blue-600">景点消费</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 页面标题 -->
+    <section class="pt-24 pb-12 bg-gradient-to-r from-blue-600 to-blue-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl font-bold text-white font-serif mb-4">景点与消费</h1>
+            <p class="text-xl text-blue-100">探索精彩景点，合理规划预算</p>
+        </div>
+    </section>
+
+    <!-- 景点分类筛选 -->
+    <section class="py-8 bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap justify-center gap-4">
+                <span class="category-tag px-6 py-3 bg-blue-600 text-white rounded-full text-sm font-medium active" data-category="all">全部景点</span>
+                <span class="category-tag px-6 py-3 bg-white border border-gray-300 rounded-full text-sm font-medium" data-category="culture">文化历史</span>
+                <span class="category-tag px-6 py-3 bg-white border border-gray-300 rounded-full text-sm font-medium" data-category="nature">自然风光</span>
+                <span class="category-tag px-6 py-3 bg-white border border-gray-300 rounded-full text-sm font-medium" data-category="entertainment">娱乐休闲</span>
+                <span class="category-tag px-6 py-3 bg-white border border-gray-300 rounded-full text-sm font-medium" data-category="food">美食体验</span>
+                <span class="category-tag px-6 py-3 bg-white border border-gray-300 rounded-full text-sm font-medium" data-category="shopping">购物天堂</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- 主要内容区域 -->
+    <section class="py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- 景点列表 -->
+                <div class="lg:col-span-2">
+                    <div class="flex justify-between items-center mb-8">
+                        <h2 class="text-2xl font-bold text-gray-900">推荐景点</h2>
+                        <div class="flex items-center space-x-4">
+                            <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option>按评分排序</option>
+                                <option>按价格排序</option>
+                                <option>按距离排序</option>
+                                <option>按热度排序</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="attractionsList" class="space-y-6">
+                        <!-- 景点卡片1 -->
+                        <div class="card-hover bg-white rounded-xl shadow-lg overflow-hidden">
+                            <div class="md:flex">
+                                <div class="md:w-1/3">
+                                    <img src="https://kimi-web-img.moonshot.cn/img/upload.wikimedia.org/4817224f76a9f1eeeede169007aafd6aef32406b.jpg" alt="古城历史博物馆" class="w-full h-48 md:h-full object-cover">
+                                </div>
+                                <div class="md:w-2/3 p-6">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <div>
+                                            <h3 class="text-xl font-bold text-gray-900 mb-2">古城历史博物馆</h3>
+                                            <div class="flex items-center mb-2">
+                                                <div class="rating-stars mr-2">★★★★★</div>
+                                                <span class="text-sm text-gray-600">4.7分 (2,156条评价)</span>
+                                            </div>
+                                            <p class="text-sm text-gray-600 mb-3">📍 古城区 • 历史文化 • 门票 ¥25</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-lg font-bold text-green-600">¥25</div>
+                                            <div class="text-sm text-gray-500">/人</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <p class="text-gray-700 mb-4">探索千年古城的历史文化，欣赏珍贵文物和古代建筑，了解当地的历史变迁和文化传承。</p>
+                                    
+                                    <div class="grid grid-cols-2 gap-4 mb-4">
+                                        <div class="text-sm">
+                                            <span class="font-medium">人流量:</span>
+                                            <span class="crowd-medium font-semibold ml-2">中等</span>
+                                        </div>
+                                        <div class="text-sm">
+                                            <span class="font-medium">最佳时间:</span>
+                                            <span class="text-blue-600 font-semibold ml-2">上午9-11点</span>
+                                        </div>
+                                        <div class="text-sm">
+                                            <span class="font-medium">游览时长:</span>
+                                            <span class="text-gray-600 ml-2">2-3小时</span>
+                                        </div>
+                                        <div class="text-sm">
+                                            <span class="font-medium">开放时间:</span>
+                                            <span class="text-gray-600 ml-2">9:00-17:00</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex space-x-2">
+                                            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">历史文化</span>
+                                            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs">适合拍照</span>
+                                        </div>
+                                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                                            查看详情
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 景点卡片2 -->
+                        <div class="card-hover bg-white rounded-xl shadow-lg overflow-hidden">
+                            <div class="md:flex">
+                                <div class="md:w-1/3">
+                                    <img src="https://kimi-web-img.moonshot.cn/img/images.unsplash.com/11ec5583ac4ff3ec23cbbb81b5f20826cb866cfd" alt="现代艺术画廊" class="w-full h-48 md:h-full object-cover">
+                                </div>
+                                <div class="md:w-2/3 p-6">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <div>
+                                            <h3 class="text-xl font-bold text-gray-900 mb-2">现代艺术画廊</h3>
+                                            <div class="flex items-center mb-2">
+                                                <div class="rating-stars mr-2">★★★★☆</div>
+                                                <span class="text-sm text-gray-600">4.4分 (892条评价)</span>
+                                            </div>
+                                            <p class="text-sm text-gray-600 mb-3">📍 艺术区 • 现代艺术 • 门票 ¥18</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-lg font-bold text-green-600">¥18</div>
+                                            <div class="text-sm text-gray-500">/人</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <p class="text-gray-700 mb-4">欣赏当代艺术作品，感受现代艺术的魅力，定期举办特展和艺术沙龙活动。</p>
+                                    
+                                    <div class="grid grid-cols-2 gap-4 mb-4">
+                                        <div class="text-sm">
+                                            <span class="font-medium">人流量:</span>
+                                            <span class="crowd-low font-semibold ml-2">较少</span>
+                                        </div>
+                                        <div class="text-sm">
+                                            <span class="font-medium">最佳时间:</span>
+                                            <span class="text-blue-600 font-semibold ml-2">下午2-4点</span>
+                                        </div>
+                                        <div class="text-sm">
+                                            <span class="font-medium">游览时长:</span>
+                                            <span class="text-gray-600 ml-2">1-2小时</span>
+                                        </div>
+                                        <div class="text-sm">
+                                            <span class="font-medium">开放时间:</span>
+                                            <span class="text-gray-600 ml-2">10:00-18:00</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex space-x-2">
+                                            <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">现代艺术</span>
+                                            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">文艺青年</span>
+                                        </div>
+                                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                                            查看详情
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 景点卡片3 -->
+                        <div class="card-hover bg-white rounded-xl shadow-lg overflow-hidden">
+                            <div class="md:flex">
+                                <div class="md:w-1/3">
+                                    <img src="https://kimi-web-img.moonshot.cn/img/www.atlantatrails.com/e0a5b9f12db0a9ce31e723acbd1f414d30f29dfc.jpg" alt="山顶观景平台" class="w-full h-48 md:h-full object-cover">
+                                </div>
+                                <div class="md:w-2/3 p-6">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <div>
+                                            <h3 class="text-xl font-bold text-gray-900 mb-2">山顶观景平台</h3>
+                                            <div class="flex items-center mb-2">
+                                                <div class="rating-stars mr-2">★★★★★</div>
+                                                <span class="text-sm text-gray-600">4.9分 (3,445条评价)</span>
+                                            </div>
+                                            <p class="text-sm text-gray-600 mb-3">📍 山顶公园 • 自然风光 • 门票 ¥12</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-lg font-bold text-green-600">¥12</div>
+                                            <div class="text-sm text-gray-500">/人</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <p class="text-gray-700 mb-4">俯瞰整个城市的绝佳位置，日落时分景色尤为壮观，是摄影爱好者的天堂。</p>
+                                    
+                                    <div class="grid grid-cols-2 gap-4 mb-4">
+                                        <div class="text-sm">
+                                            <span class="font-medium">人流量:</span>
+                                            <span class="crowd-high font-semibold ml-2">较多</span>
+                                        </div>
+                                        <div class="text-sm">
+                                            <span class="font-medium">最佳时间:</span>
+                                            <span class="text-blue-600 font-semibold ml-2">傍晚5-7点</span>
+                                        </div>
+                                        <div class="text-sm">
+                                            <span class="font-medium">游览时长:</span>
+                                            <span class="text-gray-600 ml-2">1小时</span>
+                                        </div>
+                                        <div class="text-sm">
+                                            <span class="font-medium">开放时间:</span>
+                                            <span class="text-gray-600 ml-2">6:00-22:00</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center">
+                                        <div class="flex space-x-2">
+                                            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs">自然风光</span>
+                                            <span class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">摄影胜地</span>
+                                        </div>
+                                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                                            查看详情
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 侧边栏 -->
+                <div class="space-y-8">
+                    <!-- 消费预算分析 -->
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-6">消费预算分析</h3>
+                        <div id="budgetPieChart" style="width: 100%; height: 300px;"></div>
+                        
+                        <div class="mt-6 space-y-3">
+                            <div class="budget-item p-3 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium">景点门票</span>
+                                    <span class="text-blue-600 font-semibold">¥55</span>
+                                </div>
+                                <div class="text-sm text-gray-600">3个景点总计</div>
+                            </div>
+                            
+                            <div class="budget-item p-3 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium">餐饮费用</span>
+                                    <span class="text-green-600 font-semibold">¥120</span>
+                                </div>
+                                <div class="text-sm text-gray-600">午餐 + 晚餐</div>
+                            </div>
+                            
+                            <div class="budget-item p-3 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium">交通费用</span>
+                                    <span class="text-yellow-600 font-semibold">¥35</span>
+                                </div>
+                                <div class="text-sm text-gray-600">公交 + 出租车</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 pt-4 border-t">
+                            <div class="flex justify-between items-center text-lg font-semibold">
+                                <span>总计</span>
+                                <span class="text-blue-600">¥210</span>
+                            </div>
+                            <div class="text-sm text-gray-600">每人每天预估消费</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 人流量预测 -->
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-6">人流量预测</h3>
+                        <div id="crowdChart" style="width: 100%; height: 250px;"></div>
+                        
+                        <div class="mt-4 space-y-2">
+                            <div class="flex items-center justify-between text-sm">
+                                <span>最佳游览时间</span>
+                                <span class="text-green-600 font-semibold">上午9-11点</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span>避开高峰时间</span>
+                                <span class="text-red-600 font-semibold">下午2-5点</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 省钱小贴士 -->
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-6">💡 省钱小贴士</h3>
+                        <div class="space-y-4">
+                            <div class="timeline-item">
+                                <h4 class="font-semibold text-gray-900">联票优惠</h4>
+                                <p class="text-sm text-gray-600">购买3个景点联票可节省¥15</p>
+                            </div>
+                            
+                            <div class="timeline-item">
+                                <h4 class="font-semibold text-gray-900">学生折扣</h4>
+                                <p class="text-sm text-gray-600">凭学生证享受半价优惠</p>
+                            </div>
+                            
+                            <div class="timeline-item">
+                                <h4 class="font-semibold text-gray-900">团体优惠</h4>
+                                <p class="text-sm text-gray-600">5人以上团体享受8折优惠</p>
+                            </div>
+                            
+                            <div class="timeline-item">
+                                <h4 class="font-semibold text-gray-900">早鸟特价</h4>
+                                <p class="text-sm text-gray-600">提前在线预订享受9折优惠</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 推荐餐厅 -->
+                    <div class="bg-white rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold mb-6">🍽️ 推荐餐厅</h3>
+                        <div class="space-y-4">
+                            <div class="border-b pb-4">
+                                <h4 class="font-semibold text-gray-900">老街传统小吃</h4>
+                                <p class="text-sm text-gray-600 mb-2">正宗本地美食，价格实惠</p>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-green-600 font-semibold">人均¥45</span>
+                                    <span class="rating-stars">★★★★☆</span>
+                                </div>
+                            </div>
+                            
+                            <div class="border-b pb-4">
+                                <h4 class="font-semibold text-gray-900">海景咖啡厅</h4>
+                                <p class="text-sm text-gray-600 mb-2">环境优雅，适合下午茶</p>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-green-600 font-semibold">人均¥35</span>
+                                    <span class="rating-stars">★★★★★</span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-gray-900">特色火锅城</h4>
+                                <p class="text-sm text-gray-600 mb-2">地道火锅，聚餐首选</p>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-green-600 font-semibold">人均¥68</span>
+                                    <span class="rating-stars">★★★★☆</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Service -->
+    <script src="api-service.js"></script>
+    
+    <!-- JavaScript -->
+    <script src="main.js"></script>
+    <script>
+        // 景点页面特定功能
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAttractionsPage();
+        });
+        
+        function initializeAttractionsPage() {
+            setupCategoryFilters();
+            initializeBudgetChart();
+            initializeCrowdChart();
+        }
+        
+        function setupCategoryFilters() {
+            const categoryTags = document.querySelectorAll('.category-tag');
+            categoryTags.forEach(tag => {
+                tag.addEventListener('click', function() {
+                    // 移除其他标签的active状态
+                    categoryTags.forEach(t => t.classList.remove('active'));
+                    // 添加当前标签的active状态
+                    this.classList.add('active');
+                    
+                    const category = this.dataset.category;
+                    filterAttractions(category);
+                });
+            });
+        }
+        
+        function filterAttractions(category) {
+            console.log('筛选景点类别:', category);
+            // 这里可以添加实际的筛选逻辑
+        }
+        
+        function initializeBudgetChart() {
+            const chartContainer = document.getElementById('budgetPieChart');
+            if (chartContainer && typeof echarts !== 'undefined') {
+                const chart = echarts.init(chartContainer);
+                
+                const option = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{a} <br/>{b}: ¥{c} ({d}%)'
+                    },
+                    series: [{
+                        name: '消费预算',
+                        type: 'pie',
+                        radius: '70%',
+                        data: [
+                            { value: 55, name: '景点门票' },
+                            { value: 120, name: '餐饮费用' },
+                            { value: 35, name: '交通费用' }
+                        ],
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        },
+                        itemStyle: {
+                            color: function(params) {
+                                const colors = ['#3b82f6', '#10b981', '#f59e0b'];
+                                return colors[params.dataIndex];
+                            }
+                        }
+                    }]
+                };
+                
+                chart.setOption(option);
+                
+                window.addEventListener('resize', () => {
+                    chart.resize();
+                });
+            }
+        }
+        
+        function initializeCrowdChart() {
+            const chartContainer = document.getElementById('crowdChart');
+            if (chartContainer && typeof echarts !== 'undefined') {
+                const chart = echarts.init(chartContainer);
+                
+                const option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: ['8:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00']
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLabel: {
+                            formatter: '{value}%'
+                        }
+                    },
+                    series: [{
+                        name: '人流量',
+                        type: 'line',
+                        data: [20, 45, 70, 90, 85, 60, 30],
+                        smooth: true,
+                        itemStyle: {
+                            color: '#3b82f6'
+                        },
+                        areaStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0,
+                                y: 0,
+                                x2: 0,
+                                y2: 1,
+                                colorStops: [{
+                                    offset: 0, color: 'rgba(59, 130, 246, 0.3)'
+                                }, {
+                                    offset: 1, color: 'rgba(59, 130, 246, 0.1)'
+                                }]
+                            }
+                        }
+                    }]
+                };
+                
+                chart.setOption(option);
+                
+                window.addEventListener('resize', () => {
+                    chart.resize();
+                });
+            }
+        }
+    </script>
+</body>
+</html>
